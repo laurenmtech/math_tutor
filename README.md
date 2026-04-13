@@ -29,6 +29,7 @@ The system prompt defines:
     - step by step guidance
     - formatting rules
     - off topic redirection
+        - the structured JSON output schema that the app validates before display
 2. Conversation History
 The agent stores messages so that it can remember what the student asked, maintain continuity, and avoid repetition
 3. Error Handling
