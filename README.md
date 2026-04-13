@@ -1,13 +1,17 @@
 # MATH_TUTOR OVERVIEW
 
-A lightweight AI-powered high school math tutor built in Python. It is designed to guide high-school students through problems step-by-step. The focus of this tutor is coaching, rather than answer dumping. 
+A lightweight AI-powered high school math tutor built in Python. It is designed to guide high-school students through problems step-by-step. The focus of this tutor is coaching rather than answer dumping.
 
 This project includes:
 - A command-line tutoring assistant (`script.py`)
 - A simple web app UI (`ui.py`)
 - A behavior and quality test harness (`test_agent.py`)
+- A Hugging Face API client (`api_client.py`)
+- Math validation helpers (`math_validation.py`)
+- Tutoring policy and response formatting helpers (`tutor_policy.py`)
+- Example conversations with the agent ('examples.txt')
 
-## The goal of this project is to demonstrate:
+## The goal of this project is to demonstrate
 
 - Encouraging, student-centered tutoring tone
 - Guided learning with hints and questions (instead of immediate full solutions)
@@ -18,46 +22,42 @@ This project includes:
 
 ## Project Structure
 
-- `script.py`: Main tutor app and model request logic
+- `script.py`: Main tutor orchestrator and CLI entrypoint
+- `api_client.py`: Hugging Face request handling and response parsing
+- `math_validation.py`: Equation consistency and student-step validation
+- `tutor_policy.py`: JSON parsing, formatting, and tutoring policy rules
 - `ui.py`: Streamlit web UI for browser-based chatting
 - `test_agent.py`: Automated evaluation tests for tutor behavior
 
 ## Key Design Decisions
-1. System prompt as the behavioral context
-The system prompt defines: 
-    - tutoring tone and persona boundaries
-    - step by step guidance
-    - formatting rules
-    - off topic redirection
-        - the structured JSON output schema that the app validates before display
-2. Conversation History
-The agent stores messages so that it can remember what the student asked, maintain continuity, and avoid repetition
-3. Error Handling
-The API occasionally returns rate-limit errors so instead of exposing that to the user I added friendly error handling so the user sees a friendly message instead
+1. System prompt as the behavioral context.
+        The prompt defines the tutoring tone, persona boundaries, step-by-step guidance, formatting rules, off-topic redirection, and JSON output schema.
+2. Modular structure.
+        The code is split into focused modules for API access, validation, tutoring policy, and orchestration so it is easier to read, test, and maintain.
+3. Conversation history.
+        The agent stores messages so it can maintain continuity and avoid repetition across turns.
 
 ## What I would improve with more time
-1. Create a better UI to feel more like a real product
-2. Implement memory controls -- currently the conversation grows indefinitely
-3. Add evaluation metrics -- It would be amazing for added ability for students to track progress over time with scoring options
-5. Different tutoring modes: having different prompting for algebra, geometry, calculus, SAT prep, etc. 
+1. Create a better UI so it feels more like a polished product.
+2. Spend more time shaping the tutor behavior so it teaches through the problem instead of just guiding it.
+3. Add evaluation metrics so students can track progress over time.
+4. Add different tutoring modes for algebra, geometry, calculus, SAT prep, and similar topics.
 
 
-## How to run it
+## How to run it (Option 1)
 1. Install dependencies
-        '''bash
-        pip install requests
-        '''
-        - For local testing, ensure `GOOGLE_API_KEY` is set to a valid key. If it is missing or invalid, API calls will fail.
-2. Set your API key as an environment variable
-        export GOOGLE_API_KEY="your_key_here"
-3. (Optional) Store your key in a local `.env` file based on `.env.example`.
-        - `.env` is ignored by git and will not be pushed.
-2. run the tutor
-        python script.py
-        - youll see the question pop up and then you can type questions
+```bash
+pip install requests python-dotenv
+```
+   - For local testing, ensure `HUGGING_FACE_TOKEN` is set to a valid token in your `.env.local` file. You can also set `HUGGING_FACE_MODEL` to override the default model.
+2. Run the tutor
+```bash
+python script.py
+```
+   - You should see the prompt appear in the terminal and can then type questions.
 
 
-## (optional) Run the Web UI
+## Run the Web UI (Option 2)
 
 ```bash
 streamlit run ui.py
@@ -66,16 +66,10 @@ streamlit run ui.py
 Then open the local URL shown in your terminal (usually `http://localhost:8501`).
 
 ## Test Script
-##“Due to free-tier API limits, the full evaluation suite is included for demonstration purposes but not intended to be run end-to-end.”
+The test harness runs entirely offline and checks the parser, formatting, and guardrail logic using fixed fixtures.
 
 ```bash
 python test_agent.py
-```
-
-For a fast local check of the structured JSON path without API calls:
-
-```bash
-python test_agent.py --local
 ```
 
 The test suite checks items such as:
@@ -88,5 +82,4 @@ The test suite checks items such as:
 
 ## Notes
 
-- The test harness may pause and retry on rate-limit responses (`429` or `503`).
-- Responses depend on external API behavior, so scores can vary between runs.
+- The test harness does not call the model API, so results are deterministic.

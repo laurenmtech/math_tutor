@@ -26,6 +26,12 @@ st.markdown(
         margin-top: 4px;
         font-size: 0.95rem;
     }
+    .stChatMessage {
+        color: #000000 !important;
+    }
+    .stChatMessage p {
+        color: #000000 !important;
+    }
     </style>
     """,
     unsafe_allow_html=True,

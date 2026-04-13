@@ -1,0 +1,128 @@
+Samples that resulted from the conversatiopn with the agent: 
+
+EXAMPLE 1: 
+📘Hello! I am your personal math tutor. What are you working on? (type 'exit' to quit)
+You: Solve the quadratic equation:x^2-7x+12=0
+Tutor: To solve the quadratic equation, we can use factoring. Let's try to find two numbers whose product is 12 and whose sum is -7.
+
+$$x^2-7x+12=0$$
+
+Can you think of two numbers that multiply to 12 and add up to -7?
+You: -4 and -3
+Tutor: The numbers -4 and -3 are correct. We can rewrite the equation as:
+
+$$(x-4)(x-3)=0$$
+
+Now, we can set each factor equal to zero and solve for x.
+
+$$x-4=0 \quad \text{or} \quad x-3=0$$
+
+Can you solve for x in each of these equations?
+You: yes x =4 and x = 3
+Tutor: Great job solving the equation!
+
+Can you think of a quadratic equation that can be factored as (x+2)(x-5)=0?
+
+EXAMPLE 2: (student just wants the answer) 
+📘Hello! I am your personal math tutor. What are you working on? (type 'exit' to quit)
+
+You: give me the answer to 3(2x-5)+4=2x+18
+
+Tutor: Let's solve the equation step by step. Can you show me how you would isolate the variable x?
+
+$$3(2x - 5) + 4 = 2x + 18$$
+
+What operations do you think we should perform first to get x by itself?
+
+You: just give me the answer
+
+Tutor: Let's start by solving a similar equation instead.
+
+$2(3x - 2) + 5 = 6x + 11$
+
+What is the result of distributing the 2 to the terms inside the parentheses?
+
+You: just give me the answer
+
+Tutor: I'd be happy to help you understand the solution, but let's work through it together!
+
+$5(2x - 3) = 10x - 15$
+
+What is the result of distributing the 5 to the terms inside the parentheses?
+
+EXAMPLE 3:
+Hello! I am your personal math tutor. What are you working on? (type 'exit' to quit)
+You: A right triangle has legs of length 6 and 8.What is the area of the triangle?
+Tutor: To find the area of a right triangle, we can use the formula: $$A = 
+rac{1}{2}bh$$, where $b$ is the base and $h$ is the height.
+
+Can you identify the base and height of the triangle in this problem?
+You: im not sure
+Tutor: Don't worry, it's okay to be unsure! Let's break it down step by step.
+
+What do you think the next step would be to find the area?
+You: find the base and height
+Tutor: The base and height of a right triangle are the two sides that form the right angle. In this case, we have the lengths of the two legs: 6 and 8. Can you tell me which one you would choose as the base and which one as the height?
+
+Which leg would you choose as the base and which as the height?
+You: 6 and 8
+Tutor: You've chosen the legs as the base and height. However, in a right triangle, the base and height are usually the two sides that form the right angle, and one of them is usually shorter than the other. In this case, the lengths are 6 and 8. Which one do you think is the base and which one is the height? Remember, the base and height are the two sides that form the right angle.
+
+Which one do you think is the base and which one is the height?
+You: so the base is 6 and the height is 8
+Tutor: Great job identifying the base and height! Now let's plug them into the formula to find the area.
+
+$A =
+rac{1}{2}bh$
+
+$A =
+rac{1}{2}(6)(8)$
+
+What do you get when you multiply 6 and 8?
+You: 48
+Tutor: Now let's plug that value into the formula.
+
+$A =
+rac{1}{2}bh$
+
+$A =
+rac{1}{2}(6)(8)$
+
+$A =
+rac{1}{2}(48)$
+
+$A = 24$
+
+So the area of the triangle is 24 square units.
+
+What do you think would happen to the area of the triangle if we doubled the length of both the base and the height?
+
+EXAMPLE 4: (catching user error)
+how do I solve for x: 3(2x-5)+4=2x+18
+
+Let's break it down step by step. First, we need to distribute the 3 to the terms inside the parentheses.
+
+3
+(
+2
+x
+−
+5
+)
+=
+6
+x
+−
+15
+3(2x−5)=6x−15
+
+Can you write down the result of distributing the 3?
+
+so 3x-15
+
+Nice attempt, but that transformation changes the equation. When you distribute, multiply 3 by both terms inside the parentheses. What is 
+3
+⋅
+2
+x
+3⋅2x?

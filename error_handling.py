@@ -13,7 +13,7 @@ def debug_print(label, data):
 
 def handle_api_error(data):
     """
-    Handle API error responses from the Gemini API.
+    Handle API error responses from the Hugging Face API.
     Returns either:
     - "RETRY" for temporary errors (429, 503)
     - a friendly fallback message for all other errors
