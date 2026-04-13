@@ -13,8 +13,15 @@ This script tests:
 NOTE: I dont recommend running this test suite frequently during development, as it makes many API calls.
 """
 
-from script import ask_model
+import sys
 import time
+
+from script import (
+    ask_model,
+    extract_json_text,
+    format_structured_response,
+    response_needs_repair,
+)
 
 # -----------------------------
 # Test Cases
@@ -74,6 +81,23 @@ TEST_CASES = [
     },
 ]
 
+CONTRACT_TEST_CASES = [
+    {
+        "name": "Parses plain JSON",
+        "prompt": "How do I solve 3x + 2 = 11?",
+        "raw": '{"reply": "Start by isolating x.", "follow_up_question": "What happens if you subtract 2?", "math": ["$$3x = 9$$"]}',
+        "expected": "Start by isolating x.\n\n$$3x = 9$$\n\nWhat happens if you subtract 2?",
+        "needs_repair": False,
+    },
+    {
+        "name": "Parses fenced JSON",
+        "prompt": "Can you help me think this through?",
+        "raw": '```json\n{"reply": "Try a similar problem.", "follow_up_question": "Can you solve this one?", "math": []}\n```',
+        "expected": "Try a similar problem.\n\nCan you solve this one?",
+        "needs_repair": False,
+    },
+]
+
 # -----------------------------
 # Evaluation Helpers
 # -----------------------------
@@ -100,6 +124,35 @@ def redirects_off_topic(response):
     """Tutor should gently redirect non-math questions."""
     redirect_markers = ["let's focus", "math", "problem", "topic"]
     return any(marker in response.lower() for marker in redirect_markers)
+
+
+def run_contract_tests():
+    print("\n🔍 Running JSON Contract Tests...\n")
+
+    failed = 0
+
+    for test in CONTRACT_TEST_CASES:
+        parsed = extract_json_text(test["raw"])
+        formatted = format_structured_response(parsed or {})
+        needs_repair = response_needs_repair(test["prompt"], parsed)
+
+        passed = formatted == test["expected"] and needs_repair is test["needs_repair"]
+        status = "PASS" if passed else "FAIL"
+
+        print(f"🧪 TEST: {test['name']}")
+        print(f"  - Parsed: {parsed}")
+        print(f"  - Formatted: {formatted}")
+        print(f"  - Needs repair: {needs_repair}")
+        print(f"  - Status: {status}\n")
+
+        if not passed:
+            failed += 1
+
+    if failed:
+        print(f"Contract tests failed: {failed}")
+        raise SystemExit(1)
+
+    print("Contract tests passed.\n")
 
 # -----------------------------
 # Test Runner
@@ -167,4 +220,8 @@ def run_tests():
 
 
 if __name__ == "__main__":
+    if "--local" in sys.argv:
+        run_contract_tests()
+        raise SystemExit(0)
+
     run_tests()

@@ -72,6 +72,12 @@ Then open the local URL shown in your terminal (usually `http://localhost:8501`)
 python test_agent.py
 ```
 
+For a fast local check of the structured JSON path without API calls:
+
+```bash
+python test_agent.py --local
+```
+
 The test suite checks items such as:
 - Asking guiding questions
 - Avoiding direct final answers

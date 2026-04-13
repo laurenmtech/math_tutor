@@ -209,9 +209,14 @@ def make_repair_prompt(user_input, raw_response):
 
 
 def looks_like_math_prompt(user_input):
-    math_markers = ["x", "y", "z", "=", "+", "-", "*", "/", "∫", "∑", "^", "sqrt", "solve"]
     lowered = user_input.lower()
-    return any(marker in lowered for marker in math_markers)
+    symbol_markers = ["=", "+", "-", "*", "/", "∫", "∑", "^"]
+    word_patterns = [r"\bsolve\b", r"\bsqrt\b", r"\b(?:x|y|z)\b"]
+
+    if any(marker in lowered for marker in symbol_markers):
+        return True
+
+    return any(re.search(pattern, lowered) for pattern in word_patterns)
 
 #putting everything together:
 # 1. adds the user input to the conversation history
