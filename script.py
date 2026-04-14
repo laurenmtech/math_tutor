@@ -34,17 +34,17 @@ def create_history():
 
 history = create_history()
 
-
+#Keep the system prompt plus the most recent messages.
 def trim_history(conversation_history):
-    """Keep the system prompt plus the most recent messages."""
+    
     if len(conversation_history) <= MAX_HISTORY_MESSAGES:
         return conversation_history
 
     return [conversation_history[0]] + conversation_history[-(MAX_HISTORY_MESSAGES - 1):]
 
-
+#Run a tutor turn and return the final display text.
 def ask_model(user_input, conversation_history=None, store_turn=True, allow_repair_retry=True):
-    """Run a tutor turn and return the final display text."""
+   
     active_history = conversation_history if conversation_history is not None else history
 
     reference_equation = latest_reference_equation(active_history)

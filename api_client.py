@@ -12,14 +12,14 @@ load_dotenv(".env.local")
 MODEL_NAME = os.getenv("HUGGING_FACE_MODEL", "meta-llama/Llama-3.1-8B-Instruct")
 API_URL = "https://router.huggingface.co/v1/chat/completions"
 
-
+ # Read the Hugging Face token from the environment.
 def get_api_key():
-    # Read the Hugging Face token from the environment.
+   
     return os.getenv("HUGGING_FACE_TOKEN")
 
-
+# Map internal chat roles to the Hugging Face chat-completions schema.
 def build_payload(conversation_history):
-    # Map internal chat roles to the Hugging Face chat-completions schema.
+    
     messages = []
     for msg in conversation_history:
         role = msg["role"].lower()
@@ -39,9 +39,9 @@ def build_payload(conversation_history):
         "temperature": 0.4,
     }
 
-
+# Call the Hugging Face router and normalize common error responses.
 def fetch_model_text(conversation_history):
-    # Call the Hugging Face router and normalize common error responses.
+    
     api_token = get_api_key()
     if not api_token:
         return "Please set HUGGING_FACE_TOKEN before starting the tutor."

@@ -47,9 +47,7 @@ Coaching strictness:
 - Do not solve the full problem in one turn.
 - Give only one next step per response.
 - Show at most one transformed equation per response.
-- Do not give final solved form (for example x = number) unless the student explicitly asks for the final answer.
-
-
+- Do not give final solved form (for example x = number) unless the student has provided an attempt at the correct final step. 
 """
 
 
