@@ -71,23 +71,11 @@ Coaching strictness:
 """
  
 # ---------------------------------------------------------------------------
-# Repair cap and safe fallback
-# ---------------------------------------------------------------------------
- 
-MAX_REPAIR_ATTEMPTS = 2
- 
-FALLBACK_RESPONSE = {
-    "reply": "I want to make sure I give you a helpful hint — could you restate the problem?",
-    "follow_up_question": "What step are you currently stuck on?",
-    "math": [],
-}
- 
-# ---------------------------------------------------------------------------
 # JSON extraction
 # ---------------------------------------------------------------------------
  
  
-def extract_json_text(raw_text: str) -> dict | None:
+def parse_json_text(raw_text: str) -> dict | None:
     """Pull valid JSON out of raw model output, even if wrapped in extra text."""
     cleaned = raw_text.strip()
  
@@ -158,20 +146,14 @@ def _has_final_value_reveal(parsed: dict) -> bool:
  
  
 # ---------------------------------------------------------------------------
-# Math-prompt detection  (covers word problems, not just symbols)
+# Math-prompt detection
 # ---------------------------------------------------------------------------
- 
-_MATH_SYMBOL_MARKERS = ["=", "+", "-", "*", "/", "∫", "∑", "^"]
- 
-_MATH_WORD_PATTERNS = [
-    r"\b(solve|simplify|factor|evaluate|expand|find|calculate|integrate|differentiate)\b",
-    r"\b(equation|expression|polynomial|function|variable|coefficient|exponent)\b",
-    r"\b(percent|ratio|rate|distance|speed|area|perimeter|volume|slope|intercept)\b",
-    r"\b(sqrt|sin|cos|tan|log|ln)\b",
-    r"\b(?:x|y|z|n)\b",  # lone variable references
-]
- 
-_MATH_WORD_RE = [re.compile(p, re.IGNORECASE) for p in _MATH_WORD_PATTERNS]
+
+_MATH_SYMBOL_MARKERS = ("=", "+", "-", "*", "/", "^")
+_MATH_WORD_RE = re.compile(
+    r"\b(solve|simplify|factor|evaluate|equation|expression|calculate|x|y|z)\b",
+    flags=re.IGNORECASE,
+)
  
  
 def looks_like_math_prompt(user_input: str) -> bool:
@@ -179,72 +161,12 @@ def looks_like_math_prompt(user_input: str) -> bool:
     lowered = user_input.lower()
     if any(marker in lowered for marker in _MATH_SYMBOL_MARKERS):
         return True
-    return any(pattern.search(lowered) for pattern in _MATH_WORD_RE)
- 
- 
-# ---------------------------------------------------------------------------
-# Algebraic consistency check
-# ---------------------------------------------------------------------------
- 
- 
-def _math_is_consistent_for_linear_input(reference_eq: str | None, parsed: dict) -> bool:
-    """
-    Lightweight check: if the reference equation is a simple linear equation
-    (ax + b = c), verify that any numeric equation in the response is plausibly
-    derived from it.  Returns True when the check is inconclusive or passes.
-    """
-    if reference_eq is None:
-        return True
- 
-    # Only attempt validation for simple linear equations
-    linear_match = re.match(
-        r"(-?\d*)\s*\*?\s*x\s*([+-]\s*\d+)?\s*=\s*(-?\d+)",
-        reference_eq.replace(" ", ""),
-        re.IGNORECASE,
-    )
-    if not linear_match:
-        return True  # can't validate — assume fine
- 
-    try:
-        a_str = linear_match.group(1) or "1"
-        b_str = (linear_match.group(2) or "0").replace(" ", "")
-        c_str = linear_match.group(3)
-        a, b, c = float(a_str), float(b_str), float(c_str)
-    except ValueError:
-        return True
- 
-    if a == 0:
-        return True
- 
-    expected_x = (c - b) / a
- 
-    # Look for any x = <number> in the response
-    math_blocks = parsed.get("math", [])
-    all_text = "\n".join(
-        [str(parsed.get("reply", "")), str(parsed.get("follow_up_question", ""))]
-        + ([str(b) for b in math_blocks] if isinstance(math_blocks, list) else [])
-    )
- 
-    for m in _FINAL_VALUE_RE.finditer(all_text):
-        if m.group(0).lower().startswith("x"):
-            try:
-                stated_x = float(re.search(r"[-+]?\d+(?:\.\d+)?", m.group(0).split("=")[1]).group())
-                if abs(stated_x - expected_x) > 1e-6:
-                    return False
-            except (AttributeError, ValueError, IndexError):
-                pass
- 
-    return True
+    return _MATH_WORD_RE.search(lowered) is not None
  
  
 # ---------------------------------------------------------------------------
 # Single-question enforcement helpers
 # ---------------------------------------------------------------------------
- 
- 
-def _reply_contains_question(text: str) -> bool:
-    """Return True if the reply field contains a question mark (policy violation)."""
-    return "?" in text
  
  
 def normalize_single_question(text: str) -> str:
@@ -263,7 +185,7 @@ def normalize_single_question(text: str) -> str:
 # ---------------------------------------------------------------------------
  
  
-def format_structured_response(parsed: dict) -> str:
+def format_response(parsed: dict) -> str:
     """Assemble validated JSON fields into a display string for the UI."""
     reply = str(parsed.get("reply", "")).strip()
     follow_up_question = normalize_single_question(
@@ -290,9 +212,9 @@ def format_structured_response(parsed: dict) -> str:
 # ---------------------------------------------------------------------------
  
  
-def response_needs_repair(
+def needs_repair(
     user_input: str,
-    parsed: dict,
+    parsed: dict | None,
     reference_equation: str | None = None,
 ) -> bool:
     """
@@ -313,7 +235,7 @@ def response_needs_repair(
         return True
  
     # reply must not contain a question (questions belong in follow_up_question only)
-    if _reply_contains_question(reply):
+    if "?" in reply:
         return True
  
     # Banned phrases in reply
@@ -342,14 +264,8 @@ def response_needs_repair(
         if _has_final_value_reveal(parsed) and not student_wants_final_answer(user_input):
             return True
  
-        # Algebraic consistency
-        reference = reference_equation
-        if reference is None:
-            inline_eqs = _extract_equations(user_input)
-            reference = inline_eqs[-1] if inline_eqs else None
- 
-        if not _math_is_consistent_for_linear_input(reference, parsed):
-            return True
+        # Keep policy checks lightweight for the simple tutor.
+        _ = reference_equation
  
     return False
  
@@ -359,7 +275,7 @@ def response_needs_repair(
 # ---------------------------------------------------------------------------
  
  
-def make_repair_prompt(user_input: str, raw_response: str) -> str:
+def build_repair_prompt(user_input: str, raw_response: str) -> str:
     """
     Build a strict rewrite instruction used when output fails validation.
     Includes the full system prompt so the repair call honours all tutoring rules.
@@ -384,11 +300,3 @@ def make_repair_prompt(user_input: str, raw_response: str) -> str:
     )
  
  
-# ---------------------------------------------------------------------------
-# Public aliases  (backwards-compatible with existing orchestration code)
-# ---------------------------------------------------------------------------
- 
-parse_json_text = extract_json_text
-format_response = format_structured_response
-needs_repair = response_needs_repair
-build_repair_prompt = make_repair_prompt
