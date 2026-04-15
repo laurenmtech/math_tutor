@@ -5,13 +5,13 @@ _EQUATION_RE = re.compile(r"([0-9xX+\-*/().\s^]+=[0-9xX+\-*/().\s^]+)")
 _CANDIDATE_RE = re.compile(r"[0-9xX+\-*/().\s^]+")
 
 
-"""Extract equation-like snippets from free text for later validation checks."""
+#Extract equation-like snippets from free text for later validation checks.
 def _extract_equations(text):
     candidates = _EQUATION_RE.findall(str(text))
     return [candidate.replace("X", "x").strip() for candidate in candidates]
 
 
-"""Return the most recent equation found in conversation history."""
+#Return the most recent equation found in conversation history.
 def _latest_reference_equation(conversation_history):
     for msg in reversed(conversation_history):
         content = str(msg.get("content", ""))
@@ -21,7 +21,7 @@ def _latest_reference_equation(conversation_history):
     return None
 
 
-"""Pick the most likely algebra expression segment from a mixed user message."""
+#Pick the most likely algebra expression segment from a mixed user message.
 def _extract_expression_candidate(user_input):
     cleaned = str(user_input).replace("−", "-")
     segments = _CANDIDATE_RE.findall(cleaned)
@@ -34,7 +34,7 @@ def _extract_expression_candidate(user_input):
     return candidate
 
 
-"""Extract the expression from tutor prompts like 'What is ... ?'."""
+#Extract the expression from tutor prompts like 'What is ... ?'.
 def _extract_targeted_prompt_expression(text):
     match = re.search(r"what\s+is\s+(.+?)\?", str(text), flags=re.IGNORECASE)
     if not match:
@@ -42,7 +42,7 @@ def _extract_targeted_prompt_expression(text):
     return _extract_expression_candidate(match.group(1))
 
 
-"""Parse simple linear text into (x coefficient, constant) or return None."""
+#Parse simple linear text into (x coefficient, constant) or return None.
 def _parse_linear_coeffs(expr):
     """Return (x_coeff, constant) for simple linear forms like 6x-11."""
     cleaned = str(expr).replace("−", "-").replace(" ", "")
@@ -82,7 +82,7 @@ def _parse_linear_coeffs(expr):
     return x_coeff, constant
 
 
-"""Return only the x coefficient from a simple linear expression."""
+#Return only the x coefficient from a simple linear expression.
 def _linear_x_coeff(expr):
     coeffs = _parse_linear_coeffs(expr)
     if coeffs is None:
@@ -90,7 +90,7 @@ def _linear_x_coeff(expr):
     return coeffs[0]
 
 
-"""Compute expected distributed x coefficient from text like 3(2x-5)."""
+#Compute expected distributed x coefficient from text like 3(2x-5).
 def _distribution_target_from_text(text):
     cleaned = str(text).replace("−", "-")
     match = re.search(r"(\d+)\s*\(\s*([^)]+)\s*\)", cleaned)
@@ -106,7 +106,7 @@ def _distribution_target_from_text(text):
     return outer * inner_x_coeff
 
 
-"""Derive distribution target from the left side of a reference equation."""
+#Derive distribution target from the left side of a reference equation
 def _distribution_target_from_reference_equation(reference_equation):
     if not reference_equation or "=" not in str(reference_equation):
         return None
@@ -114,7 +114,7 @@ def _distribution_target_from_reference_equation(reference_equation):
     return _distribution_target_from_text(left)
 
 
-"""Detect whether a student's distribution result conflicts with tutor intent."""
+#Detect whether a student's distribution result conflicts with tutor intent.
 def _student_invalid_distribution_for_prompt(user_input, last_tutor_message, reference_equation=None):
     if not last_tutor_message:
         return False
@@ -138,7 +138,7 @@ def _student_invalid_distribution_for_prompt(user_input, last_tutor_message, ref
     return abs(candidate_x_coeff - target_x_coeff) > 1e-6
 
 
-"""Decide whether a student's algebra step should be blocked as inconsistent."""
+#Decide whether a student's algebra step should be blocked as inconsistent.
 def _student_step_conflicts_with_reference(user_input, reference_equation, last_tutor_message=None):
     if not reference_equation or "=" not in str(reference_equation):
         return False

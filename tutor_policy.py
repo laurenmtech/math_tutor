@@ -186,7 +186,7 @@ def normalize_single_question(text: str) -> str:
  
  
 def format_response(parsed: dict) -> str:
-    """Assemble validated JSON fields into a display string for the UI."""
+    """Assemble validated JSON fields into a display string."""
     reply = str(parsed.get("reply", "")).strip()
     follow_up_question = normalize_single_question(
         str(parsed.get("follow_up_question", "")).strip()

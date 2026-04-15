@@ -1,4 +1,5 @@
 import os
+import json
 
 import requests
 from dotenv import load_dotenv
@@ -18,7 +19,7 @@ def get_api_key():
     return os.getenv("HUGGING_FACE_TOKEN")
 
 # Map internal chat roles to the Hugging Face chat-completions schema.
-def build_payload(conversation_history):
+def build_payload(conversation_history, turn_state=None):
     
     messages = []
     for msg in conversation_history:
@@ -32,6 +33,16 @@ def build_payload(conversation_history):
 
         messages.append({"role": mapped_role, "content": msg["content"]})
 
+    if isinstance(turn_state, dict) and turn_state:
+        # Add explicit structured context for each request without mutating chat history.
+        state_blob = json.dumps(turn_state, ensure_ascii=True)
+        messages.append(
+            {
+                "role": "system",
+                "content": f"Tutor state context (JSON): {state_blob}",
+            }
+        )
+
     return {
         "model": MODEL_NAME,
         "messages": messages,
@@ -40,7 +51,7 @@ def build_payload(conversation_history):
     }
 
 # Call the Hugging Face router and normalize common error responses.
-def fetch_model_text(conversation_history):
+def fetch_model_text(conversation_history, turn_state=None):
     
     api_token = get_api_key()
     if not api_token:
@@ -49,7 +60,12 @@ def fetch_model_text(conversation_history):
     headers = {"Authorization": f"Bearer {api_token}"}
 
     try:
-        response = requests.post(API_URL, json=build_payload(conversation_history), headers=headers, timeout=60)
+        response = requests.post(
+            API_URL,
+            json=build_payload(conversation_history, turn_state=turn_state),
+            headers=headers,
+            timeout=60,
+        )
     except requests.RequestException as exc:
         debug_print("Request error", str(exc))
         return "I'm having trouble reaching the model right now. Please try again in a moment."
@@ -81,10 +97,13 @@ def fetch_model_text(conversation_history):
         if isinstance(data, dict):
             choices = data.get("choices", [])
             if choices:
-                message = choices[0].get("message", {})
-                content = str(message.get("content", "")).strip()
-                if content:
-                    return content
+                first_choice = choices[0]
+                if isinstance(first_choice, dict):
+                    message = first_choice.get("message", {})
+                    if isinstance(message, dict):
+                        content = str(message.get("content", "")).strip()
+                        if content:
+                            return content
         return "I couldn't parse the model response. Please try asking again."
     except (KeyError, IndexError, TypeError) as exc:
         debug_print("Response parsing error", str(exc))

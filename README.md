@@ -36,8 +36,7 @@ This project includes:
         The agent stores messages so it can maintain continuity and avoid repetition across turns.
 
 ## What I would improve with more time
-1. Create a UI so it feels more like a polished product.
-        -include lesson plans related to the student's current homework problems
+1. Include lesson plans related to the student's current homework problems.
 2. Spend more time shaping the tutor behavior so it teaches through the problem instead of just guiding it.
 3. Add evaluation metrics so students can track progress over time.
 4. Add different tutoring modes for algebra, geometry, calculus, SAT prep, and similar topics.
